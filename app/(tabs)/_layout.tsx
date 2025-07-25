@@ -1,45 +1,97 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-import { Platform } from 'react-native';
+import { ios } from '@/constants/Constants';
+import AddProject from '@/shared/AddProject/AddProject';
+import GoogleSign from '@/shared/GoogleSign';
+import IconRectangle from '@/shared/IconRectangle';
+import ProjectsIcon from '@/shared/ProjectsIcon';
+import Settings from '@/shared/Settings';
+import SupportIcon from '@/shared/SupportIcon';
+import { store } from '@/trpc/client';
+import { router, SplashScreen, Tabs, usePathname, useRouter } from "expo-router";
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
-  );
+export default function AuthLayout() {
+	const route = usePathname();
+	const [userName, setUserName] = useState < string > ('');
+	useEffect(() => {
+		const getUsername = async () => {
+			const name = await store.getItemAsync('name');
+			setUserName(name || '');
+		};
+		getUsername();
+	}, [setUserName]);
+	return (
+		<>
+			<StatusBar style="light" />
+			<Tabs
+				screenOptions={{
+					headerStyle: { backgroundColor: '#30383A' },
+					headerLeft: () => <Settings height={24} width={24} style={{ margin: 16 }} />,
+					headerTitle: () => (
+						<IconRectangle style={{
+							position: 'absolute',
+							top: ios ? 30 : 55,
+							left: ios ? -60 : 110,
+						}} />
+					),
+					headerRight: () => (
+						<View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginRight: 16 }}>
+							<Text style={{ color: 'white', fontSize: 16, fontFamily: 'RobotoSlab-Bold' }}>{userName}</Text>
+							<GoogleSign height={24} width={24} />
+						</View>
+					),
+					tabBarActiveTintColor: 'white',
+					tabBarStyle: {
+						backgroundColor: '#30383A',
+						height: 100,
+					},
+					tabBarIconStyle: {
+						position: "absolute",
+						top: 20,
+					},
+					tabBarLabelStyle: {
+						position: "absolute",
+						top: 50,
+						// fontFamily: Fonts.bold,
+						// fontSize: Height.h14,
+					},
+				}}
+			>
+				<Tabs.Screen
+					name="support"
+					options={{
+						headerShown: true,
+						tabBarLabel: "Техподдержка",
+						tabBarIcon: ({ color }) => (
+							<SupportIcon height={24} width={25} color={color} />
+						),
+					}}
+				/>
+				<Tabs.Screen
+					name="addProject"
+					options={{
+						headerShown: true,
+						tabBarLabel: "Add Project",
+						tabBarShowLabel: true,
+						tabBarButton: (props) => {
+							return <AddProject {...props} />;
+						},
+					}}
+				/>
+				<Tabs.Screen
+					name="projects"
+					options={{
+						headerShown: true,
+						tabBarLabel: "Мои проекты",
+						tabBarShowLabel: true,
+						tabBarIcon: ({ color }) => (
+							<ProjectsIcon height={24} width={25} color={color} />
+						),
+					}}
+				/>
+			</Tabs>
+		</>
+	);
 }
+
